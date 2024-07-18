@@ -1,7 +1,10 @@
 import readline from 'readline';
-import Transaction from './MongoDB/Models/Transaction.js';
-import Person from './MongoDB/Models/Person.js';
 import csvToArray from './csvToArray.js';
+
+//Models
+import Transaction from './src/Models/Transaction.js';
+import Person from './src/Models/Person.js';
+
 
 
 // Helper function to process a single transaction
@@ -19,10 +22,10 @@ async function processTransaction(A, B, X) {
   }
 
   personA.owes_amount += X;
-  personA.owes_trans.push({ to_person: B, amount: X });
+  personA.owes_trans.push({ owes_to: B, amount: X });
 
   personB.debt_amount += X;
-  personB.debt_trans.push({ to_person: A, amount: X });
+  personB.debt_trans.push({ debt_to: A, amount: X });
 
   await personA.save();
   await personB.save();
@@ -36,8 +39,13 @@ async function queryDebt(person) {
   const personData = await Person.findOne({ personName: person });
 
   if (personData) {
-    console.log(`Total debt owed by ${person}: ${personData.owes_amount}`);
-    console.log(`Debt transactions: ${JSON.stringify(personData.owes_trans)}`);
+    console.log(`Total Total debt of ${person}: ${personData.debt_amount}`);
+    console.log(`Debt transactions:` );
+    for ( const trans of personData.owes_trans){
+        // console.log(trans);
+        console.log(`${person} -> ${trans.owes_to}  -- amount ${trans.amount} \\-`)
+    }
+    // console.log(`Debt transactions: ${JSON.stringify(personData.owes_trans)}`);
   } else {
     console.log(`${person} has no debt.`);
   }
@@ -49,7 +57,12 @@ async function queryMoneyOwed(person) {
 
   if (personData) {
     console.log(`Total money owed to ${person}: ${personData.debt_amount}`);
-    console.log(`Owed transactions: ${JSON.stringify(personData.debt_trans)}`);
+    console.log(`Owed transactions:` );
+    for ( const trans of personData.debt_trans){
+        // console.log(trans);
+        console.log(`${person} <- ${trans.debt_to}  -- amount ${trans.amount} \\-`)
+    }
+    // console.log(`Owed transactions: ${JSON.stringify(personData.debt_trans)}`);
   } else {
     console.log(`${person} is not owed any money.`);
   }
@@ -79,30 +92,26 @@ async function queryMostDebt() {
   }
 }
 
-// Function to process multiple transactions from a CSV file
-async function processMultipleTransaction(filePath, mainMenu) {
+//* Function to process multiple transactions from a CSV file
+async function processMultipleTransaction(filePath) {
   try {
-    const array = await csvToArray(`./../assets/${filePath}`);
-    // const array = await csvToArray(`./../assets/transacions.csv`);
+    const array = await csvToArray(`./assets/${filePath}`);
+    // const array = await csvToArray(`task3\assets`);
     let count = 0;
     
     for (const transaction of array) {
-      const [A, B, X] = transaction.split(',');
+      const [A, B, X] = transaction.split(' ');
       await processTransaction(A, B, X);
       count++;
     }
-
+    console.log(array);
     console.log(`Total ${count} transactions are added`);
-    mainMenu();
   } catch (error) {
     console.error('Error processing the CSV file:', error);
     promptCSVFile();
   }
-
   function promptCSVFile() {
-    rl.question('Enter the name of the CSV file again (make sure the file is in the transcationFiles folder with a .csv extension): ', (filePath) => {
-      processMultipleTransaction(filePath, mainMenu);
-    });
+    console.log('wrong file path : ');
   }
 }
 
@@ -114,7 +123,19 @@ function startCLI() {
   });
 
   function mainMenu() {
-    rl.question('Enter command: ', async (command) => {
+    console.log('\n\n-------------------Valid Commands-------------------');
+    console.log('>>  add_transaction A B X');
+    console.log('>>  query_debt A');
+    console.log('>>  query_owed A');
+    console.log('>>  query_most_owed');
+    console.log('>>  query_most_debt');
+    console.log('>>  add_transactions_from_csv test1.csv');
+    console.log('>>  exit || 0');
+    rl.question('\nEnter command:...... ', async (command) => {
+
+
+
+      
       const [cmd, ...args] = command.split(' ') ;
 
       switch (cmd) {
@@ -136,7 +157,7 @@ function startCLI() {
             console.log('Invalid number of arguments for query_debt.');
           }
           break;
-        case 'query_money_owed':
+        case 'query_owed':
           if (args.length === 1) {
             const [person] = args;
             await queryMoneyOwed(person);
@@ -144,7 +165,7 @@ function startCLI() {
             console.log('Invalid number of arguments for query_money_owed.');
           }
           break;
-        case 'query_most_money_owed':
+        case 'query_most_owed':
           await queryMostMoneyOwed();
           break;
         case 'query_most_debt':
@@ -153,12 +174,15 @@ function startCLI() {
         case 'add_transactions_from_csv':
           if (args.length === 1) {
             const [filePath] = args;
-            await processMultipleTransaction(filePath, mainMenu);
+            await processMultipleTransaction(filePath);
           } else {
             console.log('Invalid number of arguments for add_transactions_from_csv.');
           }
           break;
         case 'exit':
+          rl.close();
+          return;
+        case '0':
           rl.close();
           return;
         default:

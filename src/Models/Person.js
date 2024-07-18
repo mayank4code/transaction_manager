@@ -16,7 +16,7 @@ const PersonSchema = new Schema({
     },
     debt_trans: [
         {
-            dept_to: {
+            debt_to: {
                 type: String
             },
             amount: {

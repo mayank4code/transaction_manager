@@ -78,7 +78,7 @@ function queryMostDebt() {
 
 function processMultipleTransaction(filePath , mainMenu ) {
   // # csv conversion
-  const csvToArray = require('./csvToArray.js');
+  const csvToArray = require('../../csvToArray.js');
   // const filePath = './transactions.csv'; 
   filePath = './transcationFiles/' + filePath ; 
 
