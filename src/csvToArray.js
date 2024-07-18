@@ -1,7 +1,4 @@
-// csvToArray.js
-
 import fs from 'fs/promises';
-
 
 async function csvToArray(filePath) {
     try {

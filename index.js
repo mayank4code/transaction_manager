@@ -1,6 +1,6 @@
 import { connect } from 'mongoose';
 import dotenv from 'dotenv';
-import startCLI from './functions.js';
+import startCLI from './src/functions.js';
 
 
 dotenv.config();
