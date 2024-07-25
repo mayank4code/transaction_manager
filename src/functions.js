@@ -1,3 +1,4 @@
+import { promises as fsPromises } from 'fs';
 import readline from 'readline';
 import csvToArray from './csvToArray.js';
 
@@ -97,8 +98,23 @@ async function queryMostDebt() {
 //* Function to process multiple transactions from a CSV file
 async function processMultipleTransaction(filePath) {
   try {
+
+
+    // Construct the full path to the file
+    const fullPath = `./utilities/${filePath}`;
+
+    // Check if the file exists
+    try {
+      await fsPromises.access(fullPath);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        throw new Error(`File not found: ${fullPath}`);
+      }
+      throw error; // Throw other errors for further handling
+    }
+
     // TODO: Always store .csv in utilities 
-    const array = await csvToArray(`./utilities/${filePath}`);
+    const array = await csvToArray(fullPath);
     // const array = await csvToArray(`task3\assets`);
     let count = 0;
     
